@@ -1,0 +1,968 @@
+﻿@using NavesPortalforWebWithCoreMvc.Common
+@using Syncfusion.EJ2
+@model NavesPortalforWebWithCoreMvc.Models.TNAV_DIS_ITP_CONTROL
+@{
+    ViewBag.PageTitle = "DIS > ITP Management";
+    ViewBag.PlatformName = "DIS";
+    ViewBag.MenuName = "ITP Control / New";
+    ViewBag.FunctionName = "New";
+
+    var Modalanimation = new Syncfusion.EJ2.Popups.DialogAnimationSettings { Effect = Syncfusion.EJ2.Popups.DialogEffect.Fade };
+}
+
+@section ContentsSection{
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="ps-2 pageContentTitle">
+            <h3>@ViewBag.MenuName</h3>
+        </div>
+        <div class="ps-1">
+        </div>
+    </div>
+
+    <div>
+        <ejs-grid id="Grid" dataSource="@ViewBag.dataSource"
+              allowResizing="true"
+              allowReordering="true"
+              allowExcelExport="true"
+              allowPdfExport="true"
+              rowHeight="32"
+              showColumnChooser="true"
+              toolbar="@( new List<string>() { "ColumnChooser", "ExcelExport", "PdfExport", "CsvExport", "Print"})">
+            <e-grid-columns>
+                <e-grid-column field="NO" headerText="No" customAttributes=@(new{@class="customCss"}) width="80"></e-grid-column>
+                <e-grid-column field="PROJECT_ID" headerText="Project ID" customAttributes=@(new{@class="customCss"}) width="150"></e-grid-column>
+                <e-grid-column field="JOB_ID" headerText="Job ID" customAttributes=@(new{@class="customCss"}) width="150"></e-grid-column>
+                <e-grid-column field="WORK_ID" headerText="Work ID" customAttributes=@(new{@class="customCss"}) width="150"></e-grid-column>
+                <e-grid-column field="PROJECT_TITLE" headerText="Project Title" customAttributes=@(new{@class="customCss"}) width="250"></e-grid-column>
+                <e-grid-column field="VESSEL_NAME_KR" headerText="Vessel Name" customAttributes=@(new{@class="customCss"}) width="200"></e-grid-column>
+                <e-grid-column field="DESCRIPTION" headerText="Description" customAttributes=@(new{@class="customCss"}) width="350"></e-grid-column>
+                <e-grid-column field="CODE" headerText="Vessel Category" customAttributes=@(new{@class="customCss"}) width="200"></e-grid-column>
+                <e-grid-column field="PROJECT_CATEGORY" headerText="Sub Category" customAttributes=@(new{@class="customCss"}) width="200"></e-grid-column>
+                <e-grid-column field="TERM_OF_PROJECT" headerText="Term of Contract" customAttributes=@(new{@class="customCss"}) width="250"></e-grid-column>
+                <e-grid-column field="PM" headerText="Surveyor (PM)" customAttributes=@(new{@class="customCss"}) width="150"></e-grid-column>
+            </e-grid-columns>
+        </ejs-grid>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="align-items-center m-0 row w-50">
+            <div class="col ps-0">
+                <ejs-textbox id="SearchString" name="SearchString" value="@ViewBag.SearchString" cssClass="e-outline inputable" placeholder="Search Keyword...(Code, Part, Group, Item, Inspection...)"></ejs-textbox>
+            </div>
+            <div class="col-auto">
+                <button id="Search" type="submit" class="btn btn-purple btn-medium rounded-pill waves-effect waves-light">Search</button>
+            </div>
+        </div>
+        <div class="align-items-center m-0 row">
+            <div class="col-auto pe-1">
+                <h4>New Revision : <span class="text-primary fw-bold">@ViewBag.RevisionNo</span></h4>
+            </div>
+            <div class="col-auto pe-1">
+                <h4>Revision Status : <span id="revisionStatus" class="text-primary fw-bold">@ViewBag.ItpStatus</span></h4>
+            </div>
+            <div class="col-auto pe-0">
+                <a id="btnItpImport" class="btn btn-info btn-custom rounded-pill waves-effect waves-light" onclick="alert('Implementation required')">IMPORT</a>
+            </div>
+            <div class="col-auto pe-0">
+                <a id="btnItpAdd" class="btn btn-info btn-custom rounded-pill waves-effect waves-light">ADD</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-1">
+        <ejs-grid id="GridRevisionList" recordClick="recordClick"
+              rowHeight="32"
+              allowMultiSorting="true"
+              allowTextWrap="true"
+              allowResizing="true"
+              allowReordering="true"
+              allowSorting="true"
+              allowFiltering="true"
+              allowExcelExport="true"
+              allowPdfExport="true"
+              allowGrouping="true"
+              allowPaging="true"
+              showColumnChooser="true"
+              toolbar="@( new List<string>() { "ColumnChooser", "ExcelExport", "PdfExport", "CsvExport", "Print"})"
+              beforePrint="beforePrint"
+              rowDataBound="OnRowDataBound">
+            <e-data-manager url="@Url.Action("UrlDataSourceItpList", "DisItpControl",  new {WorkID = Model.WORK_IDX, ItpStatus = "", ActionStatus = @CommonSettingData.Dis_Action_Status.REVISION.ToString() ,SearchString = ""})" adaptor="UrlAdaptor" crossdomain="true"></e-data-manager>
+            <e-grid-filterSettings type="CheckBox"></e-grid-filterSettings>
+            <e-grid-pagesettings pageCount="10" pageSize="10" pageSizes="@(new string[] {"10", "20" , "50", "All" })"></e-grid-pagesettings>
+            <e-grid-groupSettings enableLazyLoading="true" allowReordering="true" showDropArea="true"></e-grid-groupSettings>
+            <e-grid-columns>
+                <e-grid-column field="NO" headerText="No" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="80"></e-grid-column>
+                <e-grid-column field="ITP_NO" headerText="ITP NO" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="120"></e-grid-column>
+                <e-grid-column field="ITP_VERSION" headerText="Rev." customAttributes=@(new{@class="customCss"}) textAlign="Center" width="90"></e-grid-column>
+                <e-grid-column field="ITP_STATUS" headerText="ITP Status" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="REVISION_STATUS" headerText="Rev. Status" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="ACTION_STATUS" headerText="Action Status" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="CODE" headerText="Code" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="CLIENT_REFERENCE_NO" headerText="Reference No." customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="PART" headerText="Part" customAttributes=@(new{@class="customCss"}) textAlign="Left" width="250"></e-grid-column>
+                <e-grid-column field="GROUP" headerText="Group" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="250"></e-grid-column>
+                <e-grid-column field="ITEM" headerText="Item" customAttributes=@(new{@class="customCss"}) textAlign="Left" width="350"></e-grid-column>
+                <e-grid-column field="INSPECTION" headerText="Inspection" customAttributes=@(new{@class="customCss"}) textAlign="Left" width="450"></e-grid-column>
+                <e-grid-column field="SURVER_PROCEDURE" headerText="Procedure" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+            </e-grid-columns>
+        </ejs-grid>
+
+        <script>
+            function OnRowDataBound(args) {
+                if (args.data['REVISION_STATUS'] == "DELETE") {
+                    args.row.classList.add('revisionGridRowItem');
+                    args.row.classList.add('girdDeletedRowItem');
+                }
+            }
+            function recordClick(args) {
+                dialogObj.show();
+
+                $("#lblUseType").hide();
+                $("#divChkUseType").hide();
+
+                // 해당 ITP 상세내용 불러오기
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("GetItpDetail")",
+                    data: { "ITP_IDX": args.rowData.ITP_IDX },
+                    success: function (response) {
+                        if (response.result == 'OK') {
+
+                            if (response.data.ITP_VERSION == 0) {
+                                document.getElementById('ddlType').ej2_instances[0].value = response.data.TYPE;
+                            }
+
+                            document.getElementById('ddlPart').ej2_instances[0].value = response.data.PART_CODE;
+                            document.getElementById('ddlGroup').ej2_instances[0].value = response.data.GROUP_CODE;
+                            document.getElementById('ddlItem').ej2_instances[0].value = response.data.ITEM_CODE;
+                            document.getElementById('rteRemark').ej2_instances[0].value = response.data.REMARK;
+
+                            $("#txtItpNo").val(response.data.ITP_NO);
+                            $("#txtItpIdx").val(response.data.ITP_IDX);
+                            $("#txtItpVersion").val(response.data.ITP_VERSION);
+                            $("#txtInspection").val(response.data.INSPECTION);
+                            $("#txtClientReferenceNo").val(response.data.CLIENT_REFERENCE_NO);
+
+                            $("#divPartGroup").show();
+                            $("#divItem").show();
+                            $("#divInspection").show();
+                            $("#divClientReference").show();
+                            $("#divSurveyProcedure").show();
+
+
+                            if (response.data.CODE == "" || response.data.CODE == null) {
+                                $("#divMasterCode").hide();
+                                document.getElementById('acMasterItp').ej2_instances[0].value = null;
+                                $("#divSurveyProcedureDoc").show();
+                            } else {
+                                $("#divMasterCode").show();
+                                document.getElementById('acMasterItp').ej2_instances[0].value = response.data.CODE;
+                                $("#divSurveyProcedureDoc").hide();
+                            }
+
+                            if (response.status == 'SUBMIT') {
+                                $("#btnModalSave").hide();
+                                $("#btnModalModify").hide();
+                                $("#btnModalDelete").hide();
+                            }
+                            else {
+                                $("#btnModalSave").hide();
+                                $("#btnModalModify").show();
+                                $("#btnModalDelete").show();
+                            }
+
+                            // 삭제된 IPT는 수정할 수 없음.
+                            if (response.data.REVISION_STATUS == "DELETE") {
+                                $("#btnModalSave").hide();
+                                $("#btnModalModify").hide();
+                                $("#btnModalDelete").hide();
+                            }
+
+                            // ITP Master 파일 목록 가져오기
+                            $("#FileList").empty().load("/DisItpControl/PartialFileList/?Id=" + response.data.ITP_IDX + "&KindOfFiles=ITP_CONTROL")
+                        }
+                    },
+                    error: function (req, status, error) {
+                    }
+                });
+            }
+            //Print 화면
+            function beforePrint(args) {
+                var div = document.createElement("Div")
+                div.innerHTML = "ITP Control Revision List <br/>Current Revision : @ViewBag.Revision | Status : @ViewBag.ItpStatus"
+                div.style.textAlign = 'center';
+                //div.style.color = 'red';
+                div.style.padding = '10px 0';
+                div.style.fontSize = '20px';
+                args.element.insertBefore(div, args.element.childNodes[0]);
+            }
+        </script>
+    </div>
+
+    <div class="pt-2">
+        <div class="float-start row g-0">
+            <div class="col-auto">
+                <a id="btnRevision" class="btn btn-success rounded-pill waves-effect waves-light btn-medium me-1" onclick="btnItpRevision()">Revision</a>
+            </div>
+            <div class="col-auto">
+                <a id="btnSubmit" class="btn btn-success rounded-pill waves-effect waves-light btn-medium me-1" onclick="btnItpSubmit()">Submit</a>
+            </div>
+            <div class="col-auto">
+                <a id="btnConfirm" class="btn btn-success rounded-pill waves-effect waves-light btn-medium me-1" onclick="btnItpConfirm()">Confirm</a>
+            </div>
+            <div class="col-auto">
+                <a id="btnShowLog" class="btn btn-success btn-medium rounded-pill waves-effect waves-light btn-medium" style="width:100px;">Show Log</a>
+            </div>
+        </div>
+        <div class="float-end row g-0">
+            <div class="col-auto pe-2">
+            </div>
+            <div class="col-auto pe-2">
+                <a asp-controller="DisItpControl" asp-action="Detail" asp-route-id="@Model.WORK_IDX" id="btnList" class="btn btn-primary rounded-pill waves-effect waves-light btn-medium ">DETAIL</a>
+            </div>
+            <div class="col-auto">
+                <a asp-controller="DisItpControl" asp-action="Index" id="btnList" class="btn btn-primary rounded-pill waves-effect waves-light btn-medium ">LIST</a>
+            </div>
+        </div>
+    </div>
+
+    <partial name="~/Views/Common/_PvToast.cshtml" />
+
+    <ejs-dialog id="modal_dialog" animationSettings="Modalanimation" width="75%" height="730"
+            target="#body"
+            open="dialogOpen"
+            close="dialogClose"
+            header="ADD ITP, Work ID: @ViewBag.WorkId"
+            isModal="true"
+            visible="false"
+            allowDragging="true"
+            showCloseIcon="true"
+            created="modalCreated">
+        <e-content-template>
+            <form id="frmItpControl" asp-controller="DisItpControl" asp-action="SaveNewItp" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mx-3 row bprder border-bottom">
+                    <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Project ID</label>
+                    <div class="col-sm-4">
+                        <h3>
+                            @Model.PROJECT_ID
+                        </h3>
+                    </div>
+                    <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Work ID</label>
+                    <div class="col-sm-4">
+                        <h3>
+                            @Model.WORK_ID
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="d-none">
+                    <input type="text" asp-for="PROJECT_IDX" id="txtProjectIdx" value="@Model.PROJECT_IDX" />
+                    <input type="text" asp-for="PROJECT_ID" id="txtProjectId" value="@Model.PROJECT_ID" />
+                    <input type="text" asp-for="WORK_IDX" id="txtWorkIdx" value="@Model.WORK_IDX" />
+                    <input type="text" asp-for="WORK_ID" id="txtWorkId" value="@Model.WORK_ID" />
+                    <input type="text" asp-for="ITP_IDX" id="txtItpIdx" value="@Model.ITP_IDX" />
+                    <input type="text" asp-for="ITP_VERSION" id="txtItpVersion" value="@Model.ITP_VERSION" />
+                    <input type="text" asp-for="ITP_NO" id="txtItpNo" value="@Model.ITP_NO" />
+                    <input type="text" id="TempItpIdx" name="TempItpIdx" value="@ViewBag.TempItpIdx" />
+                </div>
+
+                @{
+                    // 첫 번째 ITP 생성은 Type, Master에서 생성 가능
+                    if (ViewBag.RevisionNo == 0)
+                    {
+                        <div id="divUseTypeAll" class="mx-3 row bprder border-bottom">
+                            <label id="lblUseType" class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Use Type</label>
+                            <div id="divChkUseType" class="col-sm-4 align-self-center">
+                                <ejs-checkbox id="chkUseType" name="IsUseType" label="Use Type" checked="false" change="OnChangeUseType"></ejs-checkbox>
+                                <script>
+                                    function OnChangeUseType(args) {
+                                        document.getElementById('ddlType').ej2_instances[0].value = null;
+                                        document.getElementById('acMasterItp').ej2_instances[0].value = null;
+                                        document.getElementById('ddlPart').ej2_instances[0].value = null;
+                                        document.getElementById('ddlGroup').ej2_instances[0].value = null;
+                                        document.getElementById('ddlItem').ej2_instances[0].value = null;
+                                        document.getElementById('txtInspection').ej2_instances[0].value = null;
+                                        document.getElementById('txtClientReferenceNo').ej2_instances[0].value = null;
+                                        document.getElementById('rteRemark').ej2_instances[0].value = null;
+
+                                        // 첨부파일 목록 초기화
+                                        $("#FileList").empty()
+
+                                        $("#txtItpIdx").val("");
+                                        $("#txtItpVersion").val("");
+                                        $("#txtItpNo").val("");
+
+                                        if (args.checked) {
+                                            $("#divMasterCode").hide();
+                                            $("#divPartGroup").hide();
+                                            $("#divItem").hide();
+                                            $("#divInspection").hide();
+                                            $("#divClientReference").hide();
+                                            $("#divSurveyProcedure").hide();
+
+                                            $("#lblType").show();
+                                            $("#divType").show();
+                                        } else {
+                                            $("#divMasterCode").show();
+                                            $("#divPartGroup").show();
+                                            $("#divItem").show();
+                                            $("#divInspection").show();
+                                            $("#divClientReference").show();
+                                            $("#divSurveyProcedure").show();
+                                            // ITP Master를 불러오면 첨부파일 기능
+                                            $("#divSurveyProcedureDoc").show();
+
+                                            $("#lblType").hide();
+                                            $("#divType").hide();
+                                        }
+                                    }
+                                </script>
+                            </div>
+                            <label id="lblType" class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Type</label>
+                            <div id="divType" class="col-sm-4 align-self-center">
+                                <ejs-dropdownlist id="ddlType"
+                                      dataSource="@ViewBag.Type"
+                                      cssClass="inputable"
+                                      ejs-for="TYPE"
+                                      placeholder="Select Type...">
+                                    <e-dropdownlist-fields text="Name" value="Value"></e-dropdownlist-fields>
+                                </ejs-dropdownlist>
+
+                            </div>
+                        </div>
+                    }
+                    <div id="divMasterCode" class="mx-3 row bprder border-bottom">
+                        <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Master Code</label>
+                        <div class="col-sm-4 align-self-center">
+                            <ejs-autocomplete id="acMasterItp" ejs-for="@Model.CODE" placeholder="Search Master ITP Code..." autofill="true" filterType="Contains"
+                                      cssClass="inputable"
+                                      highlight="true"
+                                      suggestionCount="20"
+                                      minLength="2"
+                                      popupHeight="400px"
+                                      popupWidth="1100px"
+                                      headerTemplate="@Html.Raw("<div class=\"row m-2 p-1 fs-5 border-bottom border-2 bg-create-title\"><div class=\"col-1 text-center\">Code</div><div class=\"col-3 text-left\">Part</div><div class=\"col-3 text-left\">Group</div><div class=\"col-3 text-left\">Item</div><div class=\"col-12 text-left\">Inspection</div></div>")"
+                                      itemTemplate="@Html.Raw("<div class=\"row p-1 border-bottom border-1\"><div class=\"col-1 text-center\">${CODE}</div><div class=\"col-3 text-left\">${PART}</div><div class=\"col-3 text-left\">${GROUP}</div><div class=\"col-5 text-left\">${ITEM}</div><div class=\"col-12 text-left border-top\">${INSPECTION}</div></div>")"
+                                      change="OnAutoComplateMasterCodeChange"
+                                      dataSource="@ViewBag.MasterItp">
+                                <e-autocomplete-fields value="CODE"></e-autocomplete-fields>
+                            </ejs-autocomplete>
+                            <ejs-textbox type="text" id="txtMasterItpIdx" cssClass="d-none"></ejs-textbox>
+                        </div>
+                    </div>
+
+                    <div id="divPartGroup" class="mx-3 row bprder border-bottom">
+                        <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Part</label>
+                        <div class="col-sm-4 align-self-center">
+                            <ejs-dropdownlist id="ddlPart"
+                                      ejs-for="PART_CODE"
+                                      dataSource="@ViewBag.Part"
+                                      cssClass="inputable"
+                                      change="PartOnChange"
+                                      placeholder="Select Part...">
+                                <e-dropdownlist-fields text="PART" value="PART_CODE"></e-dropdownlist-fields>
+                            </ejs-dropdownlist>
+                            <script type="text/javascript">
+                                function PartOnChange() {
+                                    var ddlPart = document.getElementById('ddlPart').ej2_instances[0];
+                                    var ddlGroup = document.getElementById('ddlGroup').ej2_instances[0];
+                                    ddlGroup.enabled = true;
+
+                                    var tempQuery = new ej.data.Query().where('PART_CODE', 'equal', ddlPart.value);
+                                    ddlGroup.query = tempQuery;
+                                    ddlGroup.text = null;
+                                    ddlGroup.dataBind();
+                                }
+                            </script>
+                        </div>
+                        <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Group</label>
+                        <div class="col-sm-4 align-self-center">
+                            <ejs-dropdownlist id="ddlGroup"
+                                      ejs-for="GROUP_CODE"
+                                      dataSource="@ViewBag.Group"
+                                      cssClass="inputable"
+                                      enabled="false"
+                                      change="GroupOnChange"
+                                      placeholder="Select Group...">
+                                <e-dropdownlist-fields text="GROUP" value="GROUP_CODE"></e-dropdownlist-fields>
+                            </ejs-dropdownlist>
+                            <script type="text/javascript">
+                                function GroupOnChange() {
+                                    var ddlPart = document.getElementById('ddlPart').ej2_instances[0];
+                                    var ddlGroup = document.getElementById('ddlGroup').ej2_instances[0];
+                                    var ddlItem = document.getElementById('ddlItem').ej2_instances[0];
+                                    ddlItem.enabled = true;
+
+                                    var tempQuery = new ej.data.Query()
+                                        .where('PART_CODE', 'equal', ddlPart.value)
+                                        .where('GROUP_CODE', 'equal', ddlGroup.value);
+                                    ddlItem.query = tempQuery;
+                                    ddlItem.text = null;
+                                    ddlItem.dataBind();
+                                }
+                            </script>
+                        </div>
+                    </div>
+
+                    <div id="divItem" class="mx-3 row bprder border-bottom">
+                        <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Item</label>
+                        <div class="col-sm-10 align-self-center">
+                            <ejs-dropdownlist id="ddlItem"
+                                      ejs-for="ITEM_CODE"
+                                      dataSource="@ViewBag.Item"
+                                      cssClass="inputable"
+                                      enabled="false"
+                                      placeholder="Select Item...">
+                                <e-dropdownlist-fields text="ITEM" value="ITEM_CODE"></e-dropdownlist-fields>
+                            </ejs-dropdownlist>
+                        </div>
+                    </div>
+
+                    <div id="divInspection" class="mx-3 row bprder border-bottom">
+                        <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Inspection</label>
+                        <div class="col-sm-10 align-self-center">
+                            <ejs-textbox type="text" ejs-for="INSPECTION" id="txtInspection" cssClass="e-outline text-left inputable" placeholder="Inspection name..."></ejs-textbox>
+                        </div>
+                    </div>
+
+                    <div id="divClientReference" class="mx-3 row bprder border-bottom">
+                        <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Client Reference No.</label>
+                        <div class="col-sm-10 align-self-center">
+                            <ejs-textbox type="text" ejs-for="CLIENT_REFERENCE_NO" id="txtClientReferenceNo" cssClass="e-outline text-left inputable" placeholder="Client reference No. ..."></ejs-textbox>
+                        </div>
+                    </div>
+
+                    <div id="divSurveyProcedure" class="mx-3 row bprder border-bottom">
+                        <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Survey Procedure</label>
+                        <div class="col-sm-10 align-self-center py-1">
+                            <div id="FileList">
+                                <partial name="~/Views/DisItpControl/_Pv_UploadedFileList.cshtml" model="@ViewBag.FileList" />
+                            </div>
+                            <div id="divSurveyProcedureDoc" class="pt-1">
+                                @{
+                                    var asyncSettings = new Syncfusion.EJ2.Inputs.UploaderAsyncSettings { SaveUrl = @Url.Content("~/Uploader/Save"), RemoveUrl = @Url.Content("~/Uploader/Remove"), };
+                                }
+                                <ejs-uploader id="UploadFiles" asyncSettings="@asyncSettings"
+                                      maxFileSize="2147483648"
+                                      autoUpload="false"
+                                      multiple="true"
+                                      uploading="OnFileUploading"
+                                      selected="OnFileSelected"
+                                      removing="OnFileRemoving"
+                                      allowedExtensions="image/*, .pdf">
+                                </ejs-uploader>
+                                <script>
+                                    function OnFileSelected(args) {
+                                        for (var i = 0; i < args.filesData.length; i++) {
+                                            args.filesData[i].name = $("#TempItpIdx").val() + "__" + "@DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")" + "__" + args.filesData[i].name;
+                                        }
+                                        args.isModified = true;
+                                    }
+
+                                    function OnFileUploading(args) {
+                                        args.customFormData = [
+                                            { 'PlatformName': 'DIS' },
+                                            { 'CurrentDocIdx': $("#TempItpIdx").val() },
+                                            { 'Type': 'ITP_CONTROL' },
+                                            { 'ReleatedInfo': "@String.Empty" },
+                                            { 'OriginalFileName': args.fileData.id },
+                                            { 'SavedFileName': args.fileData.name },
+                                            { 'ProjectIdx': "@Model.PROJECT_IDX" },
+                                            { 'ProjectId': "@Model.PROJECT_ID" },
+                                            { 'WorkIdx': "@Model.WORK_IDX" },
+                                            { 'WorkId': "@Model.WORK_ID" },
+                                            { 'CreateUserName': "@ViewBag.CreateUser" }
+                                        ];
+                                    }
+
+                                    function OnFileRemoving(args) {
+                                        args.customFormData = [
+                                            { 'PlatformName': 'DIS' },
+                                            { 'CurrentDocIdx': $("#TempItpIdx").val() },
+                                            { 'Type': 'ITP_CONTROL' },
+                                            { 'ReleatedInfo': "@String.Empty" },
+                                            { 'OriginalFileName': args.filesData[0].id },
+                                            { 'SavedFileName': args.filesData[0].name },
+                                            { 'ProjectIdx': "@Model.PROJECT_IDX" },
+                                            { 'ProjectId': "@Model.PROJECT_ID" },
+                                            { 'WorkIdx': "@Model.WORK_IDX" },
+                                            { 'WorkId': "@Model.WORK_ID" },
+                                            { 'CreateUserName': "@ViewBag.CreateUser" }
+                                        ];
+                                    }
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="mx-3 row bprder border-bottom" style="height:200px;">
+                    <label class="col-sm-2 col-form-label text-end fw-bolder bg-create-title">Remark</label>
+                    <div class="col-sm-10 align-self-center">
+                        <ejs-richtexteditor id="rteRemark" ejs-for="REMARK" height="192" enableResize="false">
+                            <e-richtexteditor-toolbarsettings type="Expand" enableFloating="false" items="@CommonSettingData.getBasicRichTextEditorItemLists()"></e-richtexteditor-toolbarsettings>
+                        </ejs-richtexteditor>
+                    </div>
+                </div>
+
+                <div class="pt-2 me-3">
+                    <div class="float-start row g-0">
+                        <div class="col-auto pe-2">
+                        </div>
+                        <div class="col-auto pe-2">
+                        </div>
+                        <div class="col-auto">
+                        </div>
+                    </div>
+                    <div class="float-end row g-0">
+                        <div class="col-auto">
+                            <a id="btnModalSave" class="btn btn-primary rounded-pill waves-effect waves-light btn-medium me-1" onclick="dlgBtnSaveClick()">SAVE</a>
+                        </div>
+                        <div class="col-auto">
+                            <a id="btnModalModify" class="btn btn-primary rounded-pill waves-effect waves-light btn-medium me-1" onclick="dlgBtnModifyClick()">MODIFY</a>
+                        </div>
+                        <div class="col-auto">
+                            <a id="btnModalDelete" class="btn btn-danger rounded-pill waves-effect waves-light btn-medium me-1" onclick="dlgBtnDeleteClick()">DELETE</a>
+                        </div>
+                        <div class="col-auto">
+                            <a id="btnModalClose" class="btn btn-secondary rounded-pill waves-effect waves-light btn-medium" onclick="dlgBtnCloseClick()">CLOSE</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </e-content-template>
+    </ejs-dialog>
+    <script>
+        var dialogObjAdd;
+        // Add Button
+        var dialogBtn = document.getElementById('btnItpAdd');
+
+        dialogBtn.addEventListener('click', function () {
+            dialogObj.show();
+
+            // Initial Modal
+            clearModal();
+
+            // 상세 내용은 Master Code에서 불러오는 기능 활성화
+            $("#divMasterCode").show();
+            $("#divPartGroup").show();
+            $("#divItem").show();
+            $("#divInspection").show();
+            $("#divClientReference").show();
+            $("#divSurveyProcedure").show();
+            $("#divSurveyProcedureDoc").show();
+
+            $("#btnModalSave").show();
+            $("#btnModalModify").hide();
+            $("#btnModalDelete").hide();
+        });
+
+        function modalCreated() {
+            dialogObj = this;
+        }
+
+        function dialogClose() {
+            dialogBtn.style.display = 'block';
+
+            // Initial Modal
+            clearModal();
+        }
+
+        function dialogOpen() {
+            //dialogBtn.style.display = 'none';
+        }
+
+        // Close Dialog
+        function dlgBtnCloseClick() {
+            clearModal();
+            dialogObj.hide();
+        }
+
+        // Search Master ITP
+        function OnAutoComplateMasterCodeChange(args) {
+            if (args.value != null) {
+                if (args.value.length >= 2) {
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("GetItpMasterItem")",
+                        data: { "Code": args.value },
+                        success: function (response) {
+                            if (response.result == 'OK') {
+                                var ddlPart = document.getElementById('ddlPart').ej2_instances[0];
+                                var ddlGroup = document.getElementById('ddlGroup').ej2_instances[0];
+                                var ddlItem = document.getElementById('ddlItem').ej2_instances[0];
+                                var txtInspection = document.getElementById('txtInspection').ej2_instances[0];
+
+                                // 값 바인딩
+                                ddlPart.value = response.data.PART_CODE;
+                                ddlGroup.value = response.data.GROUP_CODE;
+                                ddlItem.value = response.data.ITEM_CODE;
+                                txtInspection.value = response.data.INSPECTION;
+
+                                ddlGroup.enabled = true;
+                                ddlItem.enabled = true;
+
+                                // ITP Master 파일 목록 가져오기
+                                $("#FileList").empty().load("/DisItpControl/PartialFileList/?Id=" + response.data.ITP_IDX + "&KindOfFiles=ITP_MASTER")
+
+                                // ITP Master를 불러오면 첨부파일 기능 숨기기
+                                $("#divSurveyProcedureDoc").hide();
+                            }
+                        },
+                        error: function (req, status, error) {
+                        }
+                    });
+                }
+            }
+        }
+
+        // Revision 생성
+        function btnItpRevision() {
+            if (confirm("새로운 Revision을 생성하시겠습니까?")) {
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("ItpCreateRevision")",
+                    data: { "workIdx": "@Model.WORK_IDX" },
+                    dataType: "json",
+                    success: function (json) {
+                        if (json.result == 'OK') {
+                            toastShow("Notification", "새로운 Revision이 성공적으로 생성되었습니다.", "e-toast-success", "e-success toast-icons");
+
+                            // Refresh Grid
+                            gridAfterModifyRefresh();
+
+                            $("#btnRevision").hide();
+                            $("#btnItpImport").show();
+                            $("#btnItpAdd").show();
+                            $("#btnSubmit").show();
+
+                            $("#revisionStatus").empty().load("/DisItpControl/GetItpRevisionStatus?id=@Model.WORK_IDX&revisionNo=@ViewBag.RevisionNo")
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        toastShow("Error", "오류가 발생하였습니다.<br/> 관리자에게 문의하세요", "e-toast-danger", "e-error toast-icons");
+                    }
+                });
+            }
+        }
+
+        // Save Dialog
+        function dlgBtnSaveClick() {
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("SaveNewItp")",
+                data: $("#frmItpControl").serialize(),
+                dataType: "json",
+                success: function (json) {
+                    if (json.result == 'OK') {
+                        toastShow("Notification", "ITP 생성이 성공적으로 완료 되었습니다.", "e-toast-success", "e-success toast-icons");
+
+                        // File Upload
+                        var uploadObj = document.getElementById("UploadFiles").ej2_instances[0];
+                        uploadObj.upload(uploadObj.getFilesData());
+
+                        // Clean Modal
+                        clearModal();
+
+                        // Refresh Grid
+                        gridAfterModifyRefresh();
+
+                        $("#btnSubmit").show();
+
+                        $("#revisionStatus").empty().load("/DisItpControl/GetItpRevisionStatus?id=@Model.WORK_IDX&revisionNo=@ViewBag.RevisionNo")
+
+                        // 신규 ITP_IDX 할당
+                        $("#TempItpIdx").val(json.TempItpIdx);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    toastShow("Error", "오류가 발생하였습니다.<br/> 관리자에게 문의하세요", "e-toast-danger", "e-error toast-icons");
+                }
+            });
+
+            dialogObj.hide();
+        }
+
+        // Delete Dialog
+        function dlgBtnDeleteClick() {
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("DeleteExistItp")",
+                data: $("#frmItpControl").serialize(),
+                dataType: "json",
+                success: function (json) {
+                    if (json.result == 'OK') {
+                        toastShow("Notification", "ITP 삭제가 성공적으로 완료 되었습니다.", "e-toast-success", "e-success toast-icons");
+
+                        // Clean Modal
+                        clearModal();
+
+                        // Refresh Grid
+                        gridAfterModifyRefresh();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    toastShow("Error", "오류가 발생하였습니다.<br/> 관리자에게 문의하세요.", "e-toast-danger", "e-error toast-icons");
+                }
+            });
+
+            dialogObj.hide();
+        }
+
+        // Modify Dialog
+        function dlgBtnModifyClick() {
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("ModifyExistItp")",
+                data: $("#frmItpControl").serialize(),
+                dataType: "json",
+                success: function (json) {
+                    if (json.result == 'OK') {
+                        toastShow("Notification", "ITP 수정이 성공적으로 완료 되었습니다.", "e-toast-success", "e-success toast-icons");
+
+                        // File Upload
+                        var uploadObj = document.getElementById("UploadFiles").ej2_instances[0];
+                        uploadObj.upload(uploadObj.getFilesData());
+
+                        // Clean Modal
+                        clearModal();
+
+                        // Refresh Grid
+                        gridAfterModifyRefresh();
+
+                        // 신규 ITP_IDX 할당
+                        $("#TempItpIdx").val(json.TempItpIdx);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    toastShow("Error", "오류가 발생하였습니다.<br/> 관리자에게 문의하세요.", "e-toast-danger", "e-error toast-icons");
+                }
+            });
+
+            dialogObj.hide();
+        }
+
+        // ITP Confirm
+        function btnItpConfirm() {
+            if (confirm("승인을 진행하시겠습니까?")) {
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("ItpConfirmByGm")",
+                    data: { "workIdx": "@Model.WORK_IDX" },
+                    dataType: "json",
+                    success: function (json) {
+                        if (json.result == 'OK') {
+                            toastShow("Notification", "성공적으로 승인이 완료 되었습니다.", "e-toast-success", "e-success toast-icons");
+
+                            // Clean Modal
+                            clearModal();
+
+                            // Refresh Grid
+                            gridAfterModifyRefresh();
+
+                            $("#btnConfirm").hide();
+
+                            $("#revisionStatus").empty().load("/DisItpControl/GetItpRevisionStatus?id=@Model.WORK_IDX&revisionNo=@ViewBag.RevisionNo")
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        toastShow("Error", "오류가 발생하였습니다.<br/> 관리자에게 문의하세요", "e-toast-danger", "e-error toast-icons");
+                    }
+                });
+            } else {
+                toastShow("Notification", "승인을 취소하였습니다.", "e-toast-success", "e-success toast-icons");
+            }
+        }
+
+        // ITP Submit
+        function btnItpSubmit() {
+            if (confirm("승인 요청을 진행하시겠습니까?")) {
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("ItpSubmit")",
+                    data: { "workIdx": "@Model.WORK_IDX" },
+                    dataType: "json",
+                    success: function (json) {
+                        if (json.result == 'OK') {
+                            toastShow("Notification", "성공적으로 승인 요청이 완료 되었습니다.", "e-toast-success", "e-success toast-icons");
+
+                            // Clean Modal
+                            clearModal();
+
+                            // Refresh Grid
+                            gridAfterModifyRefresh();
+
+                            $("#btnSubmit").hide();
+                            $("#btnConfirm").show();
+                            $("#btnItpImport").hide();
+                            $("#btnItpAdd").hide();
+
+                            $("#revisionStatus").empty().load("/DisItpControl/GetItpRevisionStatus?id=@Model.WORK_IDX&revisionNo=@ViewBag.RevisionNo")
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        toastShow("Error", "오류가 발생하였습니다.<br/> 관리자에게 문의하세요", "e-toast-danger", "e-error toast-icons");
+                    }
+                });
+            } else {
+                toastShow("Notification", "승인 요청을 취소하였습니다.", "e-toast-success", "e-success toast-icons");
+            }
+        }
+
+        // Initial Modal
+        function clearModal() {
+
+            $("#lblUseType").show();
+            $("#divChkUseType").show();
+
+            $("#lblType").hide();
+            $("#divType").hide();
+
+            if (@ViewBag.RevisionNo == 0) {
+                document.getElementById('chkUseType').ej2_instances[0].checked = false;
+                document.getElementById('ddlType').ej2_instances[0].value = null;
+            }
+
+            document.getElementById('acMasterItp').ej2_instances[0].value = null;
+            document.getElementById('ddlPart').ej2_instances[0].value = null;
+            document.getElementById('ddlGroup').ej2_instances[0].value = null;
+            document.getElementById('ddlItem').ej2_instances[0].value = null;
+            document.getElementById('txtInspection').ej2_instances[0].value = null;
+            document.getElementById('txtClientReferenceNo').ej2_instances[0].value = null;
+            document.getElementById('rteRemark').ej2_instances[0].value = null;
+
+            $("#txtItpIdx").val("");
+            $("#txtItpVersion").val("");
+            $("#txtItpNo").val("");
+
+            // 첨부파일 목록 초기화
+            $("#FileList").empty()
+
+            // 업로더의 파일 목록 초기화
+            ClearUploaderFileList("UploadFiles");
+        }
+
+        // Refresh Grid
+        function gridAfterModifyRefresh() {
+            gridRefreshItpList("DisItpControl", "GridRevisionList");
+        }
+
+
+
+    </script>
+}
+
+@section Scripts{
+    <script>
+        // Grid 높이 조절
+        window.onresize = () => {
+            autoHeight("GridRevisionList", 710);
+        };
+
+        window.onload = () => {
+            autoHeight("GridRevisionList", 710);
+        };
+
+        $(document).ready(function () {
+            $("#divInspectionDropDown").hide();
+            $("#divInspectionLabel").hide();
+
+            // ITP Control에 처음 ITP를 등록 할때 (Revision 0 생성 시)
+            if (@ViewBag.IsItpCnt == 0) {
+
+                $("#btnItpImport").show();
+                $("#btnItpAdd").show();
+
+                $("#btnRevision").hide();
+                $("#btnSubmit").show();
+                $("#btnConfirm").hide();
+            } else {
+                // Revision 1 이상 생성
+                buttonStatus();
+            }
+
+            // Search Button click 시 조회
+            $("#Search").click(function () {
+                gridRefreshItpList("DisItpControl", "GridRevisionList");
+            });
+
+            $("#SearchString").keyup(function () {
+                // 키 입력시 마다 조회
+                //gridRefreshItpList()
+
+                // Enter 입력 시 조회
+                if (window.event.keyCode == 13) {
+                    gridRefreshItpList("DisItpControl", "GridRevisionList");
+                }
+            });
+        });
+
+        // Refresh
+        function gridRefreshItpList(controller, grid) {
+            var grid = document.getElementById(grid).ej2_instances[0];
+            var SearchString = $("#SearchString").val();
+
+            grid.dataSource = new ej.data.DataManager({
+                url: "/" + controller + "/UrlDataSourceItpList?WorkID=@Model.WORK_IDX&ItpStatus=&ActionStatus=@CommonSettingData.Dis_Action_Status.REVISION.ToString()&SearchString=" + SearchString,
+                adaptor: new ej.data.UrlAdaptor(),
+                contentType: "application/json; charset=utf-8"
+            });
+        }
+
+        // 버튼 상태
+        function buttonStatus() {
+            switch ("@ViewBag.Status") {
+                case "Empty":
+                    $("#btnItpImport").hide();
+                    $("#btnItpAdd").hide();
+                    $("#btnRevision").show();
+                    $("#btnSubmit").hide();
+                    $("#btnConfirm").hide();
+                    break;
+                case "NEW":
+                    $("#btnItpImport").show();
+                    $("#btnItpAdd").show();
+                    $("#btnRevision").hide();
+                    $("#btnSubmit").show();
+                    $("#btnConfirm").hide();
+                    break;
+                case "SUBMIT":
+                    $("#btnItpImport").hide();
+                    $("#btnItpAdd").hide();
+                    $("#btnRevision").hide();
+                    $("#btnSubmit").hide();
+                    $("#btnConfirm").show();
+                    break;
+                case "CONFIRM":
+                    $("#btnItpImport").hide();
+                    $("#btnItpAdd").hide();
+                    $("#btnRevision").hide();
+                    $("#btnSubmit").hide();
+                    $("#btnConfirm").hide();
+                default:
+                    $("#btnItpImport").hide();
+                    $("#btnItpAdd").hide();
+                    $("#btnRevision").hide();
+                    $("#btnSubmit").hide();
+                    $("#btnConfirm").hide();
+                    break;
+            }
+        }
+
+        // Show Log Button
+        $("#btnShowLog").click(function () {
+            var W = (screen.availWidth * 0.5);
+            var H = 750;
+
+            var popupX = (screen.availWidth / 2) - (W / 2);
+            var popupY = (screen.availHeight / 2) - (H / 2);
+
+            var opt = "status=no,width=" + W + "px, height=" + H + "px, left=" + popupX + ", top=" + popupY + ",scrollbars=yes";
+            var popup = window.open('@Url.Action("ShowLog", "Common", new{id = Model.WORK_IDX, platform = "DIS"})', 'LogList', opt);
+
+            popup.opener = window;
+            popup.focus();
+        });
+    </script>
+}

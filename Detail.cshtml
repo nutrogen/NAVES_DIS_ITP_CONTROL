@@ -1,0 +1,176 @@
+﻿@using Syncfusion.EJ2
+@using NavesPortalforWebWithCoreMvc.Common
+
+@{
+    ViewBag.PageTitle = "DIS > ITP Management";
+    ViewBag.PlatformName = "DIS";
+    ViewBag.MenuName = "ITP Control / Detail";
+    ViewBag.FunctionName = "Detail";
+}
+
+@section ContentsSection{
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="ps-2 pageContentTitle">
+            <h3>@ViewBag.MenuName</h3>
+        </div>
+        <div class="ps-1">
+        </div>
+    </div>
+
+    <div>
+        <ejs-grid id="Grid" dataSource="@ViewBag.dataSource"
+              allowResizing="true"
+              allowReordering="true"
+              allowExcelExport="true"
+              allowPdfExport="true"
+              showColumnChooser="true"
+              toolbar="@( new List<string>() { "ColumnChooser", "ExcelExport", "PdfExport", "CsvExport", "Print"})">
+            <e-grid-columns>
+                <e-grid-column field="NO" headerText="No" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="80"></e-grid-column>
+                <e-grid-column field="PROJECT_ID" headerText="Project ID" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="JOB_ID" headerText="Job ID" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="WORK_ID" headerText="Work ID" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="PROJECT_TITLE" headerText="Project Title" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="250"></e-grid-column>
+                <e-grid-column field="VESSEL_NAME_KR" headerText="Vessel Name" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="DESCRIPTION" headerText="Description" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="350"></e-grid-column>
+                <e-grid-column field="CODE" headerText="Vessel Category" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="PROJECT_CATEGORY" headerText="Sub Category" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="TERM_OF_PROJECT" headerText="Term of Contract" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="250"></e-grid-column>
+                <e-grid-column field="PROJECT_PM" template="#TemplateProjectPm" headerText="PM" customAttributes=@(new{@class="customCss"}) width="150" textAlign="Center"></e-grid-column>
+            </e-grid-columns>
+        </ejs-grid>
+        <script id="TemplateProjectPm" type="text/x-template">
+            ${if(PROJECT_PM != null)}
+                ${for(PM of PROJECT_PM.split('|'))}
+                    <span>${PM}</span><br />
+                ${/for}
+            ${else}
+                <span></span>
+            ${/if}
+        </script>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="row align-items-center m-0 w-50">
+            <div class="col ps-0">
+                <ejs-textbox id="SearchString" name="SearchString" value="@ViewBag.SearchString" cssClass="e-outline inputable" placeholder="Search Keyword...(Code, Part, Group, Item, Inspection...)"></ejs-textbox>
+            </div>
+            <div class="col-auto">
+                <button id="Search" type="submit" class="btn btn-purple btn-medium rounded-pill waves-effect waves-light">Search</button>
+            </div>
+        </div>
+        <div class="row align-items-center m-0">
+            <a asp-controller="DisItpControl" asp-action="Create" asp-route-id="@ViewBag.WorkId" id="btnNew" class="btn btn-info btn-custom rounded-pill waves-effect waves-light">New</a>
+        </div>
+    </div>
+
+    <div class="mt-2">
+        <ejs-grid id="GridItpList" dataBound="dataBound" column-layout="Fixed"
+              rowHeight="32"
+              allowMultiSorting="true"
+              allowTextWrap="true"
+              allowResizing="true"
+              allowReordering="true"
+              allowSorting="true"
+              allowFiltering="true"
+              allowExcelExport="true"
+              allowPdfExport="true"
+              allowGrouping="true"
+              allowPaging="true"
+              showColumnChooser="true"
+              toolbar="@( new List<string>() { "ColumnChooser", "ExcelExport", "PdfExport", "CsvExport", "Print"})"
+              rowDataBound="OnRowDataBound">
+            <e-data-manager url="@Url.Action("UrlDataSourceItpList", "DisItpControl",  new {WorkID = ViewBag.WorkId, ItpStatus = @CommonSettingData.Dis_Itp_Status.CONFIRM.ToString(), ActionStatus = @CommonSettingData.Dis_Action_Status.APPLY.ToString() ,SearchString = ""})" adaptor="UrlAdaptor" crossdomain="true"></e-data-manager>
+            <e-grid-filterSettings type="CheckBox"></e-grid-filterSettings>
+            <e-grid-pagesettings pageCount="10" pagesize="10" pageSizes="@(new string[] {"10", "20" , "50", "All" })"></e-grid-pagesettings>
+            <e-grid-groupSettings enableLazyLoading="true" allowReordering="true" showDropArea="true"></e-grid-groupSettings>
+            <e-grid-columns>
+                <e-grid-column field="NO" headerText="No" type="number" format="N" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="80"></e-grid-column>
+                <e-grid-column field="ITP_NO" headerText="ITP NO" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="120"></e-grid-column>
+                <e-grid-column field="ITP_VERSION" headerText="Rev" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="90"></e-grid-column>
+                <e-grid-column field="REVISION_STATUS" headerText="Status" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="CODE" headerText="Code" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="CLIENT_REFERENCE_NO" headerText="Reference No." customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="PART" headerText="Part" customAttributes=@(new{@class="customCss"}) width="250"></e-grid-column>
+                <e-grid-column field="GROUP" headerText="Group" customAttributes=@(new{@class="customCss"}) width="150"></e-grid-column>
+                <e-grid-column field="ITEM" headerText="Item" customAttributes=@(new{@class="customCss"}) width="350"></e-grid-column>
+                <e-grid-column field="INSPECTION" headerText="Inspection" customAttributes=@(new{@class="customCss"}) textAlign="Left" width="450"></e-grid-column>
+                <e-grid-column field="ITP_STATUS" headerText="ITP Status" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="COMPLETE_DATE" headerText="Complete Date" format="yyyy-MM-dd" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="EXTRANET_STATUS" headerText="Extranet Status" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="INSPECTION_RESULT_DOC" headerText="Inspection Result Doc." customAttributes=@(new{@class="customCss"}) textAlign="Center" width="250"></e-grid-column>
+                <e-grid-column field="REPORT_NO" headerText="Report No." customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="START_DATE" headerText="Start Date" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="COMPLETE_DATE" headerText="Complete Date" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="MH_SURVEY" headerText="M/H (Survey)" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="MH_TRAVEL" headerText="M/H (Travel)" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+            </e-grid-columns>
+        </ejs-grid>
+
+        @*등록된 ITP가 없을 때 띄우는 경고 모달*@
+        <partial name="~/Views/Common/_PvAlertModal.cshtml" model="ViewBag.Msg" />
+
+        <script>
+            function dataBound() {
+                var grid = document.getElementById('GridItpList').ej2_instances[0];
+                grid.hideScroll();
+            }
+
+            function OnRowDataBound(args) {
+                if (args.data['REVISION_STATUS'] == "DELETE") {
+                    args.row.classList.add('revisionGridRowItem');
+                    args.row.classList.add('girdDeletedRowItem');
+                }
+            }
+        </script>
+    </div>
+
+    <div class="row justify-content-end mt-3 mb-2">
+        <div class="col-1 d-grid gap-2">
+        </div>
+        <div class="col-1 d-grid gap-2">
+            <a asp-controller="DisItpControl" asp-action="Index" id="btnList" class="btn btn-primary rounded-pill waves-effect waves-light">LIST</a>
+        </div>
+    </div>
+}
+
+@section Scripts{
+    <script>
+        // Grid 높이 조절
+        window.onresize = () => {
+            autoHeight("GridItpList", 730);
+        };
+
+        window.onload = () => {
+            autoHeight("GridItpList", 730);
+        };
+
+        $(document).ready(function () {
+            // Search Button click 시 조회
+            $("#Search").click(function () {
+                gridRefreshItpList("DisItpControl", "GridItpList");
+            });
+
+            $("#SearchString").keyup(function () {
+                // 키 입력시 마다 조회
+                //gridRefreshItpList()
+
+                // Enter 입력 시 조회
+                if (window.event.keyCode == 13) {
+                    gridRefreshItpList("DisItpControl", "GridItpList");
+                }
+            });
+        });
+
+        function gridRefreshItpList(controller, grid) {
+            var grid = document.getElementById(grid).ej2_instances[0];
+            var SearchString = $("#SearchString").val();
+
+            grid.dataSource = new ej.data.DataManager({
+                url: "/" + controller + "/UrlDataSourceItpList?WorkID=@ViewBag.WorkId&ItpStatus=@CommonSettingData.Dis_Itp_Status.CONFIRM.ToString()&ActionStatus=@CommonSettingData.Dis_Action_Status.APPLY.ToString()&SearchString=" + SearchString,
+                adaptor: new ej.data.UrlAdaptor(),
+                contentType: "application/json; charset=utf-8"
+            });
+        }
+    </script>
+}

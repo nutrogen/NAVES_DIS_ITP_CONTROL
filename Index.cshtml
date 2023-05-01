@@ -1,0 +1,138 @@
+﻿@using Syncfusion.EJ2
+
+@{
+    ViewBag.PageTitle = "DIS > ITP Management";
+    ViewBag.PlatformName = "DIS";
+    ViewBag.MenuName = "ITP Control Management";
+    ViewBag.FunctionName = "List";
+}
+
+@section SearchSection{
+    <div class="row align-items-center m-0">
+        <div class="col-5 ps-0">
+            <ejs-textbox id="SearchString" name="SearchString" value="@ViewBag.SearchString" cssClass="e-outline inputable" placeholder="Search Keyword...(Project ID, Project Title, Vessel Name, Work ID, Description... )"></ejs-textbox>
+        </div>
+        <div class="col-auto">
+            Period
+        </div>
+        <div class="col-2">
+            <ejs-datepicker id="StartDate" name="StartDate" value="@ViewBag.StartDate" value="@DateTime.Now.AddYears(-3).ToShortDateString()" format="yyyy-MM-dd" placeholder="Start Date..." cssClass="inputable"></ejs-datepicker>
+        </div>
+        <div class="col-2">
+            <ejs-datepicker id="EndDate" name="EndDate" value="@ViewBag.EndDate" value="@DateTime.Now.ToShortDateString()" format="yyyy-MM-dd" placeholder="End Date..." cssClass="inputable"></ejs-datepicker>
+        </div>
+        <div class="col">
+            <button id="Search" type="submit" class="btn btn-purple btn-medium rounded-pill waves-effect waves-light">Search</button>
+        </div>
+    </div>
+}
+
+@section ContentsSection{
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="ps-2 pageContentTitle">
+            <h3>@ViewBag.MenuName</h3>
+        </div>
+        <div class="ps-1">
+        </div>
+    </div>
+
+    <div>
+        <ejs-grid id="Grid" recordClick="recordClick" dataBound="dataBound"
+              height="510"
+              allowMultiSorting="true"
+              allowTextWrap="true"
+              allowResizing="true"
+              allowReordering="true"
+              allowSorting="true"
+              allowFiltering="true"
+              allowExcelExport="true"
+              allowPdfExport="true"
+              allowGrouping="true"
+              allowPaging="true"
+              showColumnChooser="true"
+              toolbar="@( new List<string>() { "ColumnChooser", "ExcelExport", "PdfExport", "CsvExport", "Print"})">
+            <e-grid-loadingIndicator indicatorType="Shimmer"></e-grid-loadingIndicator>
+            <e-data-manager url="@Url.Action("UrlDataSource", "DisItpControl",  new {SearchString = "", StartDate = @DateTime.Now.AddYears(-3).ToShortDateString(), EndDate = @DateTime.Now.ToShortDateString()} )" adaptor="UrlAdaptor" crossdomain="true"></e-data-manager>
+            <e-grid-filterSettings type="CheckBox"></e-grid-filterSettings>
+            <e-grid-pagesettings pageCount="10" pageSize="15" pageSizes="@(new string[] {"10", "15", "20" , "50", "All" })"></e-grid-pagesettings>
+            <e-grid-groupSettings enableLazyLoading="true" allowReordering="true" showDropArea="true"></e-grid-groupSettings>
+            <e-grid-columns>
+                <e-grid-column field="NO" headerText="No" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="80"></e-grid-column>
+                <e-grid-column field="PROJECT_ID" headerText="Project ID" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="JOB_ID" headerText="Job ID" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="WORK_ID" headerText="Work ID" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="150"></e-grid-column>
+                <e-grid-column field="PROJECT_TITLE" headerText="Project Title" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="350"></e-grid-column>
+                <e-grid-column field="VESSEL_NAME_KR" headerText="Vessel Name" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="DESCRIPTION" headerText="Description" customAttributes=@(new{@class="customCss"}) textAlign="Left" width="350"></e-grid-column>
+                <e-grid-column field="CODE" headerText="Vessel Category" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="PROJECT_CATEGORY" headerText="Sub Category" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="200"></e-grid-column>
+                <e-grid-column field="TERM_OF_PROJECT" headerText="Term of Contract" customAttributes=@(new{@class="customCss"}) textAlign="Center" width="250"></e-grid-column>
+                <e-grid-column field="PROJECT_PM" template="#TemplateProjectPm" headerText="PM" customAttributes=@(new{@class="customCss"}) width="150" textAlign="Center"></e-grid-column>
+            </e-grid-columns>
+        </ejs-grid>
+        <script id="TemplateProjectPm" type="text/x-template">
+            ${if(PROJECT_PM != null)}
+                ${for(PM of PROJECT_PM.split('|'))}
+                    <span>${PM}</span><br />
+                ${/for}
+            ${else}
+                <span></span>
+            ${/if}
+        </script>
+    </div>
+
+    <script>
+        function recordClick(args) {
+            window.location.href = "/DisItpControl/Detail/" + args.rowData.WORK_IDX;
+        }
+        function dataBound() {
+            var grid = document.getElementById('Grid').ej2_instances[0];
+            grid.hideScroll();
+        }
+    </script>
+
+}
+
+@section Scripts{
+    <script>
+        // Grid 높미 조절
+        window.onresize = () => {
+            autoHeight("Grid", 540);
+        };
+
+        window.onload = () => {
+            autoHeight("Grid", 540);
+        };
+
+        $(document).ready(function () {
+            // Search Button click 시 조회
+            $("#Search").click(function () {
+                gridRefresh("DisItpControl", "Grid");
+            });
+
+            $("#SearchString").keyup(function () {
+                // 키 입력시 마다 조회
+                //gridRefresh()
+
+                // Enter 입력 시 조회
+                if (window.event.keyCode == 13) {
+                    gridRefresh("DisItpControl", "Grid");
+                }
+            });
+
+            $("#StartDate").keyup(function () {
+                // Enter 입력 시 조회
+                if (window.event.keyCode == 13) {
+                    gridRefresh("DisItpControl", "Grid");
+                }
+            });
+
+            $("#EndDate").keyup(function () {
+                // Enter 입력 시 조회
+                if (window.event.keyCode == 13) {
+                    gridRefresh("DisItpControl", "Grid");
+                }
+            });
+        });
+    </script>
+}
